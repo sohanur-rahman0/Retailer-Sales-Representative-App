@@ -1,0 +1,17 @@
+# Retailer Sales Representative Backend
+
+## Tasks
+
+- [x] Project scaffolding (NestJS + Prisma + Docker)
+- [x] Prisma schema & migrations (data model)
+- [x] Seed scripts (regions, areas, distributors, territories, retailers, SRs, assignments)
+- [x] Auth module (JWT login for Admin & SR)
+- [x] Admin CRUD modules (Region, Area, Distributor, Territory)
+- [x] Retailer module (listing, details, search/filter, update)
+- [x] Admin bulk operations (CSV import, bulk assign/unassign)
+- [x] Redis caching layer
+- [x] Swagger/OpenAPI documentation
+- [x] Unit tests (15+ test cases across 3 files)
+- [x] Dockerfile & docker-compose
+- [x] README with setup, usage, API list, scaling note
+- [x] Prisma migration SQL

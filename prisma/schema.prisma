@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  SR
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  username     String    @unique
+  name         String
+  phone        String?
+  passwordHash String    @map("password_hash")
+  role         UserRole  @default(SR)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  assignments  SalesRepRetailer[]
+
+  @@map("users")
+}
+
+model Region {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+
+  areas     Area[]
+  retailers Retailer[]
+
+  @@map("regions")
+}
+
+model Area {
+  id       Int    @id @default(autoincrement())
+  name     String
+  regionId Int    @map("region_id")
+
+  region      Region      @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  territories Territory[]
+  retailers   Retailer[]
+
+  @@index([regionId])
+  @@map("areas")
+}
+
+model Distributor {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  retailers Retailer[]
+
+  @@map("distributors")
+}
+
+model Territory {
+  id     Int    @id @default(autoincrement())
+  name   String
+  areaId Int    @map("area_id")
+
+  area      Area       @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  retailers Retailer[]
+
+  @@index([areaId])
+  @@map("territories")
+}
+
+model Retailer {
+  id            Int      @id @default(autoincrement())
+  uid           String   @unique
+  name          String
+  phone         String?
+  regionId      Int      @map("region_id")
+  areaId        Int      @map("area_id")
+  distributorId Int      @map("distributor_id")
+  territoryId   Int      @map("territory_id")
+  points        Int      @default(0)
+  routes        String?
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  region      Region      @relation(fields: [regionId], references: [id])
+  area        Area        @relation(fields: [areaId], references: [id])
+  distributor Distributor @relation(fields: [distributorId], references: [id])
+  territory   Territory   @relation(fields: [territoryId], references: [id])
+
+  assignments SalesRepRetailer[]
+
+  @@index([regionId])
+  @@index([areaId])
+  @@index([distributorId])
+  @@index([territoryId])
+  @@index([name])
+  @@index([phone])
+  @@map("retailers")
+}
+
+model SalesRepRetailer {
+  id         Int      @id @default(autoincrement())
+  salesRepId Int      @map("sales_rep_id")
+  retailerId Int      @map("retailer_id")
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  salesRep User     @relation(fields: [salesRepId], references: [id], onDelete: Cascade)
+  retailer Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+
+  @@unique([salesRepId, retailerId])
+  @@index([salesRepId])
+  @@index([retailerId])
+  @@map("sales_rep_retailers")
+}

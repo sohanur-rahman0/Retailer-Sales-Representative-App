@@ -1,0 +1,75 @@
+# Walkthrough — Retailer Sales Representative Backend
+
+## Summary
+
+Built a complete NestJS backend for managing Sales Representatives and their assigned retailers. The project includes **59 files** across 12 modules.
+
+## Architecture
+
+```mermaid
+graph TD
+  Client -->|JWT| Auth["Auth Module"]
+  Client -->|GET/PATCH| Retailers["Retailers Module"]
+  Client -->|POST/DELETE| Admin["Admin Module"]
+  Client -->|CRUD| CRUD["Region/Area/Distributor/Territory"]
+  
+  Retailers -->|Cache| Redis["Redis"]
+  Retailers --> Prisma["Prisma ORM"]
+  Admin --> Prisma
+  CRUD --> Prisma
+  Auth --> Prisma
+  Prisma --> PostgreSQL["PostgreSQL"]
+```
+
+## What Was Built
+
+| Component | Files | Key Details |
+|-----------|-------|-------------|
+| **Auth** | 8 files | JWT login, Passport strategy, role guards, `@CurrentUser` decorator |
+| **Retailers** | 5 files | Paginated listing (SR-scoped), detail (Redis-cached, 5 min TTL), update (points/routes/notes only) |
+| **Admin Bulk** | 5 files | CSV import (stream-parsed, batch 500), bulk assign/unassign with `skipDuplicates` |
+| **Regions CRUD** | 5 files | Full CRUD under `/admin/regions` |
+| **Areas CRUD** | 5 files | Full CRUD under `/admin/areas` |
+| **Distributors CRUD** | 5 files | Full CRUD under `/admin/distributors` |
+| **Territories CRUD** | 5 files | Full CRUD under `/admin/territories` |
+| **Infrastructure** | 4 files | PrismaModule (global), RedisModule (global, ioredis) |
+| **Schema** | 2 files | Prisma schema + SQL migration with 12 indexes |
+| **Seed** | 1 file | 10 regions, 50 areas, 20 distributors, 100 territories, 1000 retailers, 6 users, ~350 assignments |
+| **Docker** | 3 files | Multi-stage Dockerfile, docker-compose (app + Postgres 16 + Redis 7), .dockerignore |
+| **Tests** | 3 files | 15+ unit tests across auth, retailers, and admin services |
+| **Docs** | 1 file | Swagger at `/api/docs`, README with full API table |
+
+## Key Design Decisions
+
+1. **Unified `users` table** with a `role` enum (`ADMIN`/`SR`) instead of separate `sales_reps` and `admins` tables — simpler auth, single JWT payload
+2. **`sales_rep_retailers` mapping table** with composite unique index for O(1) assignment checks
+3. **Redis caching** on retailer detail (most-hit endpoint) with automatic invalidation on update
+4. **Batch CSV import** — stream-parsed with `csv-parse`, inserted in batches of 500 with `skipDuplicates` to handle re-imports gracefully
+5. **12 database indexes** covering all foreign keys, search columns (name, phone), and the retailer UID unique index
+
+## Tests Written
+
+- [auth.service.spec.ts](file:///c:/Users/USER/Desktop/task/src/auth/auth.service.spec.ts) — Login success, invalid username, invalid password, user validation (5 tests)
+- [retailers.service.spec.ts](file:///c:/Users/USER/Desktop/task/src/retailers/retailers.service.spec.ts) — Paginated listing, search/filter, cache hit/miss, access control, update + cache invalidation (7 tests)
+- [admin.service.spec.ts](file:///c:/Users/USER/Desktop/task/src/admin/admin.service.spec.ts) — Bulk assign, unassign, CSV import (valid/invalid/empty), SR listing (8 tests)
+
+## How to Run
+
+```bash
+# Docker (recommended)
+docker-compose up --build
+docker-compose exec app npx prisma migrate deploy
+docker-compose exec app npm run prisma:seed
+
+# Local
+npm install
+npx prisma generate
+npx prisma migrate dev
+npm run prisma:seed
+npm run start:dev
+
+# Tests
+npm run test
+```
+
+Swagger UI: `http://localhost:3000/api/docs`
