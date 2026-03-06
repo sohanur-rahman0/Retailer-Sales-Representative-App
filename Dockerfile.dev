@@ -1,0 +1,30 @@
+FROM node:20-slim
+
+WORKDIR /app
+
+# Install system dependencies for Prisma
+RUN apt-get update && apt-get install -y \
+    openssl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev dependencies)
+RUN npm install
+
+# Copy prisma schema for generation
+COPY prisma ./prisma
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Copy the rest of the application code
+COPY . .
+
+# Expose the port the app runs on
+EXPOSE 3000
+
+# Default command for development (can be overridden in docker-compose)
+CMD ["npm", "run", "start:dev"]

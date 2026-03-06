@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAreaDto } from './dto/create-area.dto';
 import { UpdateAreaDto } from './dto/update-area.dto';
@@ -40,7 +40,30 @@ export class AreasService {
     }
 
     async remove(id: number) {
-        await this.findOne(id);
+        const area = await this.findOne(id);
+
+        // Check for child entities that would be orphaned
+        const territoryCount = await this.prisma.territory.count({
+            where: { areaId: id },
+        });
+
+        const retailerCount = await this.prisma.retailer.count({
+            where: { areaId: id },
+        });
+
+        if (territoryCount > 0 || retailerCount > 0) {
+            const errors = [];
+            if (territoryCount > 0) {
+                errors.push(`${territoryCount} territor(ies) assigned to this area`);
+            }
+            if (retailerCount > 0) {
+                errors.push(`${retailerCount} retailer(s) assigned to this area`);
+            }
+            throw new ConflictException(
+                `Cannot delete area "${area.name}". Please remove the following dependencies first: ${errors.join(', ')}.`
+            );
+        }
+
         return this.prisma.area.delete({ where: { id } });
     }
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTerritoryDto } from './dto/create-territory.dto';
 import { UpdateTerritoryDto } from './dto/update-territory.dto';
@@ -46,7 +46,19 @@ export class TerritoriesService {
     }
 
     async remove(id: number) {
-        await this.findOne(id);
+        const territory = await this.findOne(id);
+
+        // Check for child entities that would be orphaned
+        const retailerCount = await this.prisma.retailer.count({
+            where: { territoryId: id },
+        });
+
+        if (retailerCount > 0) {
+            throw new ConflictException(
+                `Cannot delete territory "${territory.name}". Please remove the ${retailerCount} retailer(s) assigned to this territory first.`
+            );
+        }
+
         return this.prisma.territory.delete({ where: { id } });
     }
 }

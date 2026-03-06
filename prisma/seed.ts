@@ -75,7 +75,7 @@ async function main() {
     console.log(`✅ Created ${territories.length} territories`);
 
     // --- Retailers (1000 for demo) ---
-    const retailerData = [];
+    const retailerData: any[] = [];
     for (let i = 1; i <= 1000; i++) {
         const region = regions[i % regions.length];
         const area = areas[i % areas.length];

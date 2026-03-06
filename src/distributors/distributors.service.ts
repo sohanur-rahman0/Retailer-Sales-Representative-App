@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateDistributorDto } from './dto/create-distributor.dto';
 import { UpdateDistributorDto } from './dto/update-distributor.dto';
@@ -33,7 +33,19 @@ export class DistributorsService {
     }
 
     async remove(id: number) {
-        await this.findOne(id);
+        const distributor = await this.findOne(id);
+
+        // Check for child entities that would be orphaned
+        const retailerCount = await this.prisma.retailer.count({
+            where: { distributorId: id },
+        });
+
+        if (retailerCount > 0) {
+            throw new ConflictException(
+                `Cannot delete distributor "${distributor.name}". Please remove the ${retailerCount} retailer(s) assigned to this distributor first.`
+            );
+        }
+
         return this.prisma.distributor.delete({ where: { id } });
     }
 }
