@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import { CreateTerritoryDto } from './dto/create-territory.dto';
 import { UpdateTerritoryDto } from './dto/update-territory.dto';
 
@@ -8,10 +9,17 @@ export class TerritoriesService {
     constructor(private readonly prisma: PrismaService) { }
 
     async create(dto: CreateTerritoryDto) {
-        return this.prisma.territory.create({
-            data: dto,
-            include: { area: { include: { region: true } } },
-        });
+        try {
+            return await this.prisma.territory.create({
+                data: dto,
+                include: { area: { include: { region: true } } },
+            });
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+                throw new ConflictException(`Territory with this name already exists in the selected area`);
+            }
+            throw error;
+        }
     }
 
     async findAll() {
@@ -38,11 +46,18 @@ export class TerritoriesService {
 
     async update(id: number, dto: UpdateTerritoryDto) {
         await this.findOne(id);
-        return this.prisma.territory.update({
-            where: { id },
-            data: dto,
-            include: { area: { include: { region: true } } },
-        });
+        try {
+            return await this.prisma.territory.update({
+                where: { id },
+                data: dto,
+                include: { area: { include: { region: true } } },
+            });
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+                throw new ConflictException(`Territory with this name already exists in the selected area`);
+            }
+            throw error;
+        }
     }
 
     async remove(id: number) {

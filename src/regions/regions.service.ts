@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import { CreateRegionDto } from './dto/create-region.dto';
 import { UpdateRegionDto } from './dto/update-region.dto';
 
@@ -8,7 +9,14 @@ export class RegionsService {
     constructor(private readonly prisma: PrismaService) { }
 
     async create(dto: CreateRegionDto) {
-        return this.prisma.region.create({ data: dto });
+        try {
+            return await this.prisma.region.create({ data: dto });
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+                throw new ConflictException(`Region with name "${dto.name}" already exists`);
+            }
+            throw error;
+        }
     }
 
     async findAll() {
@@ -29,7 +37,14 @@ export class RegionsService {
 
     async update(id: number, dto: UpdateRegionDto) {
         await this.findOne(id);
-        return this.prisma.region.update({ where: { id }, data: dto });
+        try {
+            return await this.prisma.region.update({ where: { id }, data: dto });
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+                throw new ConflictException(`Region with name "${dto.name}" already exists`);
+            }
+            throw error;
+        }
     }
 
     async remove(id: number) {
@@ -45,7 +60,7 @@ export class RegionsService {
         });
 
         if (areaCount > 0 || retailerCount > 0) {
-            const errors = [];
+            const errors: string[] = [];
             if (areaCount > 0) {
                 errors.push(`${areaCount} area(s) assigned to this region`);
             }

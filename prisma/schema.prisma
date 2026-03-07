@@ -12,15 +12,19 @@ enum UserRole {
   SR
 }
 
+// I have intentionally implemented refreshToken feature in a simple way as it's a task, for production I would have stored it device wise in a different table
+
 model User {
-  id           Int       @id @default(autoincrement())
-  username     String    @unique
-  name         String
-  phone        String?
-  passwordHash String    @map("password_hash")
-  role         UserRole  @default(SR)
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  id                Int       @id @default(autoincrement())
+  username          String    @unique
+  name              String
+  phone             String?
+  passwordHash      String    @map("password_hash")
+  role              UserRole  @default(SR)
+  refreshTokenHash  String?   @map("refresh_token_hash")
+  refreshTokenExp   DateTime? @map("refresh_token_exp")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
 
   assignments  SalesRepRetailer[]
 

@@ -27,15 +27,6 @@ async function bootstrap() {
         .setVersion('1.0')
         .addServer(`http://localhost:${process.env.PORT || 3000}`)
         .addBearerAuth(
-            {
-                type: 'http',
-                scheme: 'bearer',
-                bearerFormat: 'JWT',
-                name: 'JWT',
-                description: 'Enter JWT token',
-                in: 'header',
-            },
-            'JWT-auth', // This name here is important for matching up with @ApiBearerAuth() in your controller!
         )
         .addTag('Auth', 'Authentication endpoints')
         .addTag('Retailers', 'Retailer management endpoints')

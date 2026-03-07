@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import { CreateDistributorDto } from './dto/create-distributor.dto';
 import { UpdateDistributorDto } from './dto/update-distributor.dto';
 
@@ -8,7 +9,14 @@ export class DistributorsService {
     constructor(private readonly prisma: PrismaService) { }
 
     async create(dto: CreateDistributorDto) {
-        return this.prisma.distributor.create({ data: dto });
+        try {
+            return await this.prisma.distributor.create({ data: dto });
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+                throw new ConflictException(`Distributor with name "${dto.name}" already exists`);
+            }
+            throw error;
+        }
     }
 
     async findAll() {
@@ -29,7 +37,14 @@ export class DistributorsService {
 
     async update(id: number, dto: UpdateDistributorDto) {
         await this.findOne(id);
-        return this.prisma.distributor.update({ where: { id }, data: dto });
+        try {
+            return await this.prisma.distributor.update({ where: { id }, data: dto });
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+                throw new ConflictException(`Distributor with name "${dto.name}" already exists`);
+            }
+            throw error;
+        }
     }
 
     async remove(id: number) {

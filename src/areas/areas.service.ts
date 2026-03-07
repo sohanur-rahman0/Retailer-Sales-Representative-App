@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import { CreateAreaDto } from './dto/create-area.dto';
 import { UpdateAreaDto } from './dto/update-area.dto';
 
@@ -8,10 +9,17 @@ export class AreasService {
     constructor(private readonly prisma: PrismaService) { }
 
     async create(dto: CreateAreaDto) {
-        return this.prisma.area.create({
-            data: dto,
-            include: { region: true },
-        });
+        try {
+            return await this.prisma.area.create({
+                data: dto,
+                include: { region: true },
+            });
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+                throw new ConflictException(`Area with this name already exists in the selected region`);
+            }
+            throw error;
+        }
     }
 
     async findAll() {
@@ -32,11 +40,18 @@ export class AreasService {
 
     async update(id: number, dto: UpdateAreaDto) {
         await this.findOne(id);
-        return this.prisma.area.update({
-            where: { id },
-            data: dto,
-            include: { region: true },
-        });
+        try {
+            return await this.prisma.area.update({
+                where: { id },
+                data: dto,
+                include: { region: true },
+            });
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+                throw new ConflictException(`Area with this name already exists in the selected region`);
+            }
+            throw error;
+        }
     }
 
     async remove(id: number) {
@@ -52,7 +67,7 @@ export class AreasService {
         });
 
         if (territoryCount > 0 || retailerCount > 0) {
-            const errors = [];
+            const errors: string[] = [];
             if (territoryCount > 0) {
                 errors.push(`${territoryCount} territor(ies) assigned to this area`);
             }

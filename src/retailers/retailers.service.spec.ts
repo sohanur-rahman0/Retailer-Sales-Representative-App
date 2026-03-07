@@ -114,34 +114,52 @@ describe('RetailersService', () => {
                 }),
             );
         });
+
+        it('should cache results and return from cache on subsequent calls', async () => {
+            const mockResult = {
+                data: [mockRetailer],
+                meta: { total: 1, page: 1, limit: 20, totalPages: 1 },
+            };
+
+            // First call - should cache
+            jest.spyOn(prisma.retailer, 'findMany').mockResolvedValue([mockRetailer]);
+            jest.spyOn(prisma.retailer, 'count').mockResolvedValue(1);
+            jest.spyOn(redis, 'set').mockResolvedValue('OK');
+
+            const result1 = await service.findAssigned(1, { page: 1, limit: 20 });
+
+            expect(result1).toEqual(mockResult);
+            expect(redis.set).toHaveBeenCalled();
+
+            // Second call - should return from cache
+            jest.spyOn(redis, 'get').mockResolvedValue(JSON.stringify(mockResult));
+
+            const result2 = await service.findAssigned(1, { page: 1, limit: 20 });
+
+            expect(result2).toEqual(mockResult);
+            expect(prisma.retailer.findMany).toHaveBeenCalledTimes(1); // Only called once
+        });
     });
 
     describe('findByUid', () => {
-        it('should return retailer from cache if available', async () => {
-            jest.spyOn(redis, 'get').mockResolvedValue(JSON.stringify(mockRetailer));
-
-            const result = await service.findByUid('RTL-000001', undefined, 'ADMIN');
-
-            expect(result).toEqual(mockRetailer);
-            expect(prisma.retailer.findUnique).not.toHaveBeenCalled();
-        });
-
-        it('should fetch from DB and cache if not cached', async () => {
-            jest.spyOn(redis, 'get').mockResolvedValue(null);
+        it('should return retailer from database', async () => {
             jest.spyOn(prisma.retailer, 'findUnique').mockResolvedValue(mockRetailer as any);
 
             const result = await service.findByUid('RTL-000001', undefined, 'ADMIN');
 
             expect(result).toEqual(mockRetailer);
-            expect(redis.set).toHaveBeenCalledWith(
-                'retailer:RTL-000001',
-                JSON.stringify(mockRetailer),
-                300,
-            );
+            expect(prisma.retailer.findUnique).toHaveBeenCalledWith({
+                where: { uid: 'RTL-000001' },
+                include: {
+                    region: true,
+                    area: true,
+                    distributor: true,
+                    territory: true,
+                },
+            });
         });
 
         it('should throw NotFoundException for invalid UID', async () => {
-            jest.spyOn(redis, 'get').mockResolvedValue(null);
             jest.spyOn(prisma.retailer, 'findUnique').mockResolvedValue(null);
 
             await expect(service.findByUid('INVALID', undefined, 'ADMIN')).rejects.toThrow(
@@ -150,7 +168,6 @@ describe('RetailersService', () => {
         });
 
         it('should throw ForbiddenException if SR is not assigned', async () => {
-            jest.spyOn(redis, 'get').mockResolvedValue(null);
             jest.spyOn(prisma.retailer, 'findUnique').mockResolvedValue(mockRetailer as any);
             jest.spyOn(prisma.salesRepRetailer, 'findFirst').mockResolvedValue(null);
 
@@ -161,7 +178,7 @@ describe('RetailersService', () => {
     });
 
     describe('update', () => {
-        it('should update only allowed fields and invalidate cache', async () => {
+        it('should update only allowed fields', async () => {
             jest.spyOn(prisma.retailer, 'findUnique').mockResolvedValue(mockRetailer as any);
             const updatedRetailer = { ...mockRetailer, points: 200, notes: 'Updated notes' };
             jest.spyOn(prisma.retailer, 'update').mockResolvedValue(updatedRetailer as any);
@@ -175,7 +192,6 @@ describe('RetailersService', () => {
 
             expect(result.points).toBe(200);
             expect(result.notes).toBe('Updated notes');
-            expect(redis.del).toHaveBeenCalledWith('retailer:RTL-000001');
         });
 
         it('should throw NotFoundException for invalid UID', async () => {

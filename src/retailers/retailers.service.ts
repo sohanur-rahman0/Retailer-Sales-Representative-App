@@ -18,6 +18,15 @@ export class RetailersService {
         const { page = 1, limit = 20, search, region_id, area_id, distributor_id, territory_id } = query;
         const skip = (page - 1) * limit;
 
+        // Create cache key with all parameters
+        const cacheKey = `retailers:assigned:${userId}:${page}:${limit}:${search || ''}:${region_id || ''}:${area_id || ''}:${distributor_id || ''}:${territory_id || ''}`;
+
+        // Try cache first
+        const cached = await this.redis.get(cacheKey);
+        if (cached) {
+            return JSON.parse(cached);
+        }
+
         // Build where clause — only assigned retailers for this SR
         const where: Prisma.RetailerWhereInput = {
             assignments: {
@@ -56,7 +65,7 @@ export class RetailersService {
             this.prisma.retailer.count({ where }),
         ]);
 
-        return {
+        const result = {
             data,
             meta: {
                 total,
@@ -65,6 +74,11 @@ export class RetailersService {
                 totalPages: Math.ceil(total / limit),
             },
         };
+
+        // Cache the result
+        await this.redis.set(cacheKey, JSON.stringify(result), RETAILER_CACHE_TTL);
+
+        return result;
     }
 
     async findAll(query: QueryRetailersDto) {
@@ -114,23 +128,6 @@ export class RetailersService {
     }
 
     async findByUid(uid: string, userId?: number, userRole?: string) {
-        // Try cache first
-        const cacheKey = `retailer:${uid}`;
-        const cached = await this.redis.get(cacheKey);
-        if (cached) {
-            const retailer = JSON.parse(cached);
-            // For SR, verify assignment
-            if (userRole === 'SR' && userId) {
-                const isAssigned = await this.prisma.salesRepRetailer.findFirst({
-                    where: { salesRepId: userId, retailerId: retailer.id },
-                });
-                if (!isAssigned) {
-                    throw new ForbiddenException('You are not assigned to this retailer');
-                }
-            }
-            return retailer;
-        }
-
         const retailer = await this.prisma.retailer.findUnique({
             where: { uid },
             include: {
@@ -154,9 +151,6 @@ export class RetailersService {
                 throw new ForbiddenException('You are not assigned to this retailer');
             }
         }
-
-        // Cache the result
-        await this.redis.set(cacheKey, JSON.stringify(retailer), RETAILER_CACHE_TTL);
 
         return retailer;
     }
@@ -194,9 +188,6 @@ export class RetailersService {
                 territory: true,
             },
         });
-
-        // Invalidate cache
-        await this.redis.del(`retailer:${uid}`);
 
         return updated;
     }
