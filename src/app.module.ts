@@ -8,6 +8,9 @@ import { RegionsModule } from './regions/regions.module';
 import { AreasModule } from './areas/areas.module';
 import { DistributorsModule } from './distributors/distributors.module';
 import { TerritoriesModule } from './territories/territories.module';
+import { PointsModule } from './points/points.module';
+import { RoutesModule } from './routes/routes.module';
+import { ConfigModule } from './config/config.module';
 
 @Module({
     imports: [
@@ -20,6 +23,9 @@ import { TerritoriesModule } from './territories/territories.module';
         AreasModule,
         DistributorsModule,
         TerritoriesModule,
+        PointsModule,
+        RoutesModule,
+        ConfigModule,
     ],
 })
 export class AppModule { }

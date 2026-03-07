@@ -70,9 +70,35 @@ model Territory {
 
   area      Area       @relation(fields: [areaId], references: [id], onDelete: Cascade)
   retailers Retailer[]
+  points    Point[]
 
   @@index([areaId])
   @@map("territories")
+}
+
+model Point {
+  id          Int     @id @default(autoincrement())
+  name        String
+  territoryId Int     @map("territory_id")
+
+  territory Territory @relation(fields: [territoryId], references: [id], onDelete: Cascade)
+  routes    Route[]
+  retailers Retailer[]
+
+  @@index([territoryId])
+  @@map("points")
+}
+
+model Route {
+  id     Int    @id @default(autoincrement())
+  name   String
+  pointId Int    @map("point_id")
+
+  point     Point     @relation(fields: [pointId], references: [id], onDelete: Cascade)
+  retailers Retailer[]
+
+  @@index([pointId])
+  @@map("routes")
 }
 
 model Retailer {
@@ -84,8 +110,8 @@ model Retailer {
   areaId        Int      @map("area_id")
   distributorId Int      @map("distributor_id")
   territoryId   Int      @map("territory_id")
-  points        Int      @default(0)
-  routes        String?
+  pointId       Int?     @map("point_id")
+  routeId       Int?     @map("route_id")
   notes         String?
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
@@ -94,6 +120,8 @@ model Retailer {
   area        Area        @relation(fields: [areaId], references: [id])
   distributor Distributor @relation(fields: [distributorId], references: [id])
   territory   Territory   @relation(fields: [territoryId], references: [id])
+  point       Point?      @relation(fields: [pointId], references: [id])
+  route       Route?      @relation(fields: [routeId], references: [id])
 
   assignments SalesRepRetailer[]
 
@@ -101,6 +129,8 @@ model Retailer {
   @@index([areaId])
   @@index([distributorId])
   @@index([territoryId])
+  @@index([pointId])
+  @@index([routeId])
   @@index([name])
   @@index([phone])
   @@map("retailers")

@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { ConfigService } from '../config/config.service';
 import { LoginDto } from './dto/login.dto';
 import { TokensDto } from './dto/tokens.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -11,11 +12,8 @@ export class AuthService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly jwtService: JwtService,
+        private readonly configService: ConfigService,
     ) { }
-
-    // Token expiration times 
-    private readonly ACCESS_TOKEN_EXPIRATION = '15m';  // 15 minutes
-    private readonly REFRESH_TOKEN_EXPIRATION = '7d';  // 7 days
 
     async login(loginDto: LoginDto): Promise<TokensDto> {
         const user = await this.prisma.user.findUnique({
@@ -56,7 +54,7 @@ export class AuthService {
         try {
             // Verify the refresh token
             const payload = this.jwtService.verify(refreshTokenDto.refreshToken, {
-                secret: process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+                secret: this.configService.jwtRefreshSecret,
             });
 
             const user = await this.prisma.user.findUnique({
@@ -127,12 +125,12 @@ export class AuthService {
 
         const [accessToken, refreshToken] = await Promise.all([
             this.jwtService.signAsync(payload, {
-                expiresIn: this.ACCESS_TOKEN_EXPIRATION,
-                secret: process.env.JWT_SECRET,
+                expiresIn: this.configService.jwtExpiration,
+                secret: this.configService.jwtSecret,
             }),
             this.jwtService.signAsync(payload, {
-                expiresIn: this.REFRESH_TOKEN_EXPIRATION,
-                secret: process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+                expiresIn: '7d', // Refresh token: 7 days
+                secret: this.configService.jwtRefreshSecret,
             }),
         ]);
 

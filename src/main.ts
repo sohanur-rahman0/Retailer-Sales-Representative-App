@@ -2,9 +2,23 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { ConfigService } from './config/config.service';
 
 async function bootstrap() {
+    // Validate environment variables on startup
+    let configService: ConfigService;
+    try {
+        configService = new ConfigService();
+        console.log('✅ Environment variables validated successfully');
+    } catch (error) {
+        console.error('❌ Environment validation failed:', error.message);
+        process.exit(1);
+    }
+
     const app = await NestFactory.create(AppModule);
+
+    // Get config service instance from app context
+    configService = app.get(ConfigService);
 
     // Global validation pipe
     app.useGlobalPipes(
@@ -25,7 +39,7 @@ async function bootstrap() {
             'Backend API for Sales Representatives managing retailers across Bangladesh',
         )
         .setVersion('1.0')
-        .addServer(`http://localhost:${process.env.PORT || 3000}`)
+        .addServer(`http://localhost:${configService.port}`)
         .addBearerAuth(
         )
         .addTag('Auth', 'Authentication endpoints')
@@ -70,7 +84,8 @@ async function bootstrap() {
         customfavIcon: '/favicon.ico',
     });
 
-    const port = process.env.PORT || 3000;
+    configService = app.get(ConfigService);
+    const port = configService.port;
     await app.listen(port);
     console.log(`Application running on port ${port}`);
     console.log(`Swagger docs at http://localhost:${port}/api/docs`);

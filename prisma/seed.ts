@@ -74,6 +74,36 @@ async function main() {
     }
     console.log(`✅ Created ${territories.length} territories`);
 
+    // --- Points (3 per territory = 300 total) ---
+    const points: any[] = [];
+    for (const territory of territories) {
+        for (let i = 1; i <= 3; i++) {
+            const name = `${territory.name} Point-${i}`;
+            const point = await prisma.point.upsert({
+                where: { id: points.length + 1 },
+                update: {},
+                create: { name, territoryId: territory.id },
+            });
+            points.push(point);
+        }
+    }
+    console.log(`✅ Created ${points.length} points`);
+
+    // --- Routes (2 per point = 600 total) ---
+    const routes: any[] = [];
+    for (const point of points) {
+        for (let i = 1; i <= 2; i++) {
+            const name = `${point.name} Route-${i}`;
+            const route = await prisma.route.upsert({
+                where: { id: routes.length + 1 },
+                update: {},
+                create: { name, pointId: point.id },
+            });
+            routes.push(route);
+        }
+    }
+    console.log(`✅ Created ${routes.length} routes`);
+
     // --- Retailers (1000 for demo) ---
     const retailerData: any[] = [];
     for (let i = 1; i <= 1000; i++) {
@@ -81,6 +111,8 @@ async function main() {
         const area = areas[i % areas.length];
         const distributor = distributors[i % distributors.length];
         const territory = territories[i % territories.length];
+        const point = points[i % points.length];
+        const route = routes[i % routes.length];
 
         retailerData.push({
             uid: `RTL-${String(i).padStart(6, '0')}`,
@@ -90,8 +122,8 @@ async function main() {
             areaId: area.id,
             distributorId: distributor.id,
             territoryId: territory.id,
-            points: Math.floor(Math.random() * 500),
-            routes: `Route-${String.fromCharCode(65 + (i % 26))}`,
+            pointId: point.id,
+            routeId: route.id,
         });
     }
 

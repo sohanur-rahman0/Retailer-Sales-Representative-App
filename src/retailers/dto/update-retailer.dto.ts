@@ -1,20 +1,18 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsInt, IsString, Min } from 'class-validator';
+import { IsOptional, IsInt } from 'class-validator';
 
 export class UpdateRetailerDto {
-    @ApiPropertyOptional({ description: 'Retailer loyalty points', example: 150 })
+    @ApiPropertyOptional({ description: 'Point ID this retailer belongs to', example: 1 })
     @IsOptional()
     @IsInt()
-    @Min(0)
-    points?: number;
+    pointId?: number;
 
-    @ApiPropertyOptional({ description: 'Delivery routes', example: 'Route A, Route B' })
+    @ApiPropertyOptional({ description: 'Route ID this retailer belongs to', example: 1 })
     @IsOptional()
-    @IsString()
-    routes?: string;
+    @IsInt()
+    routeId?: number;
 
     @ApiPropertyOptional({ description: 'Additional notes', example: 'Prefers morning delivery' })
     @IsOptional()
-    @IsString()
     notes?: string;
 }

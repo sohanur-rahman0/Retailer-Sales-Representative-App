@@ -1,14 +1,15 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import Redis from 'ioredis';
+import { ConfigService } from '../config/config.service';
 
 @Injectable()
 export class RedisService implements OnModuleDestroy {
     private readonly client: Redis;
 
-    constructor() {
+    constructor(private readonly configService: ConfigService) {
         this.client = new Redis({
-            host: process.env.REDIS_HOST || 'localhost',
-            port: parseInt(process.env.REDIS_PORT || '6379', 10),
+            host: configService.redisHost,
+            port: configService.redisPort,
             maxRetriesPerRequest: 3,
             retryStrategy(times: number) {
                 const delay = Math.min(times * 50, 2000);

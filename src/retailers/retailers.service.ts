@@ -15,11 +15,11 @@ export class RetailersService {
     ) { }
 
     async findAssigned(userId: number, query: QueryRetailersDto) {
-        const { page = 1, limit = 20, search, region_id, area_id, distributor_id, territory_id } = query;
+        const { page = 1, limit = 20, search, region_id, area_id, distributor_id, territory_id, point_id, route_id } = query;
         const skip = (page - 1) * limit;
 
         // Create cache key with all parameters
-        const cacheKey = `retailers:assigned:${userId}:${page}:${limit}:${search || ''}:${region_id || ''}:${area_id || ''}:${distributor_id || ''}:${territory_id || ''}`;
+        const cacheKey = `retailers:assigned:${userId}:${page}:${limit}:${search || ''}:${region_id || ''}:${area_id || ''}:${distributor_id || ''}:${territory_id || ''}:${point_id || ''}:${route_id || ''}`;
 
         // Try cache first
         const cached = await this.redis.get(cacheKey);
@@ -48,6 +48,8 @@ export class RetailersService {
         if (area_id) where.areaId = area_id;
         if (distributor_id) where.distributorId = distributor_id;
         if (territory_id) where.territoryId = territory_id;
+        if (point_id) where.pointId = point_id;
+        if (route_id) where.routeId = route_id;
 
         const [data, total] = await Promise.all([
             this.prisma.retailer.findMany({
@@ -177,8 +179,8 @@ export class RetailersService {
         const updated = await this.prisma.retailer.update({
             where: { uid },
             data: {
-                ...(updateDto.points !== undefined && { points: updateDto.points }),
-                ...(updateDto.routes !== undefined && { routes: updateDto.routes }),
+                ...(updateDto.pointId !== undefined && { pointId: updateDto.pointId }),
+                ...(updateDto.routeId !== undefined && { routeId: updateDto.routeId }),
                 ...(updateDto.notes !== undefined && { notes: updateDto.notes }),
             },
             include: {
@@ -186,6 +188,20 @@ export class RetailersService {
                 area: true,
                 distributor: true,
                 territory: true,
+                point: {
+                    include: {
+                        territory: { include: { area: { include: { region: true } } } }
+                    }
+                },
+                route: {
+                    include: {
+                        point: {
+                            include: {
+                                territory: { include: { area: { include: { region: true } } } }
+                            }
+                        }
+                    }
+                },
             },
         });
 

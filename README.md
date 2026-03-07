@@ -264,6 +264,36 @@ Once running, visit http://localhost:3000/api/docs for interactive Swagger docum
 - `POST /admin/retailers/import` - Bulk CSV import
 - `POST /admin/assignments/bulk` - Bulk assignments
 
+### CSV Import Format
+
+```csv
+uid,name,phone,region_id,area_id,distributor_id,territory_id,point_id,route_id,notes
+RTL-NEW-001,New Shop,+8801700000001,1,1,1,1,1,1,New retailer
+RTL-NEW-002,Corner Store,+8801700000002,1,1,1,1,2,3,Regular customer
+```
+
+**Required Columns:**
+- `uid` — Unique retailer identifier (RTL-XXXXX format)
+- `name` — Retailer name
+- `phone` — Phone number
+- `region_id` — Region ID (must exist)
+- `area_id` — Area ID (must exist, belong to region)
+- `distributor_id` — Distributor ID (must exist)
+- `territory_id` — Territory ID (must exist, belong to area)
+- `point_id` — Point ID (must exist, belong to territory)
+- `route_id` — Route ID (must exist, belong to point)
+
+**Optional Columns:**
+- `notes` — Additional notes
+
+### Query Parameters for Retailers API
+
+**GET /retailers** supports the following filters:
+- `search` — Search by name, UID, or phone
+- `region_id`, `area_id`, `distributor_id`, `territory_id` — Hierarchical filters
+- `point_id`, `route_id` — Point and route filters
+- `page`, `limit` — Pagination (default: page=1, limit=20)
+
 ---
 
 ## 🧪 Testing

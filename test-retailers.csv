@@ -1,11 +1,11 @@
-uid,name,phone,region_id,area_id,distributor_id,territory_id,points,routes,notes
-RTL-TEST-001,Test Shop 1,+8801700000001,1,1,1,1,100,Route-A,Test retailer 1
-RTL-TEST-002,Corner Store 2,+8801700000002,1,1,1,1,150,Route-A,Test retailer 2
-RTL-TEST-003,Mini Mart 3,+8801700000003,1,2,1,2,200,Route-B,Test retailer 3
-RTL-TEST-004,Super Store 4,+8801700000004,1,2,1,2,75,Route-B,Test retailer 4
-RTL-TEST-005,Local Grocery 5,+8801700000005,2,3,2,3,300,Route-C,Test retailer 5
-RTL-TEST-006,Family Store 6,+8801700000006,2,3,2,3,125,Route-C,Test retailer 6
-RTL-TEST-007,Quick Mart 7,+8801700000007,2,4,2,4,50,Route-D,Test retailer 7
-RTL-TEST-008,Express Store 8,+8801700000008,2,4,2,4,175,Route-D,Test retailer 8
-RTL-TEST-009,Mega Store 9,+8801700000009,3,5,3,5,400,Route-E,Test retailer 9
-RTL-TEST-010,Premium Shop 10,+8801700000010,3,5,3,5,225,Route-E,Test retailer 10
+uid,name,phone,region_id,area_id,distributor_id,territory_id,point_id,route_id,notes
+RTL-TEST-001,Test Shop 1,+8801700000001,1,1,1,1,1,1,Test retailer 1
+RTL-TEST-002,Corner Store 2,+8801700000002,1,1,1,1,2,2,Test retailer 2
+RTL-TEST-003,Mini Mart 3,+8801700000003,1,2,1,2,3,3,Test retailer 3
+RTL-TEST-004,Super Store 4,+8801700000004,1,2,1,2,4,4,Test retailer 4
+RTL-TEST-005,Local Grocery 5,+8801700000005,2,3,2,3,5,5,Test retailer 5
+RTL-TEST-006,Family Store 6,+8801700000006,2,3,2,3,6,6,Test retailer 6
+RTL-TEST-007,Quick Mart 7,+8801700000007,2,4,2,4,7,7,Test retailer 7
+RTL-TEST-008,Express Store 8,+8801700000008,2,4,2,4,8,8,Test retailer 8
+RTL-TEST-009,Mega Store 9,+8801700000009,3,5,3,5,9,9,Test retailer 9
+RTL-TEST-010,Premium Shop 10,+8801700000010,3,5,3,5,10,10,Test retailer 10

@@ -18,8 +18,8 @@ describe('RetailersService', () => {
         areaId: 1,
         distributorId: 1,
         territoryId: 1,
-        points: 100,
-        routes: 'Route-A',
+        pointId: 1,
+        routeId: 1,
         notes: null,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -27,6 +27,18 @@ describe('RetailersService', () => {
         area: { id: 1, name: 'Dhaka North', regionId: 1 },
         distributor: { id: 1, name: 'Alpha Distribution' },
         territory: { id: 1, name: 'Dhaka North Zone-1', areaId: 1 },
+        point: {
+            id: 1,
+            name: 'Downtown Point',
+            territoryId: 1,
+            territory: { id: 1, name: 'Dhaka North Zone-1', areaId: 1 }
+        },
+        route: {
+            id: 1,
+            name: 'Morning Route',
+            pointId: 1,
+            point: { id: 1, name: 'Downtown Point', territoryId: 1 }
+        },
     };
 
     beforeEach(async () => {
@@ -124,19 +136,20 @@ describe('RetailersService', () => {
             // First call - should cache
             jest.spyOn(prisma.retailer, 'findMany').mockResolvedValue([mockRetailer]);
             jest.spyOn(prisma.retailer, 'count').mockResolvedValue(1);
-            jest.spyOn(redis, 'set').mockResolvedValue('OK');
+            jest.spyOn(redis, 'set').mockResolvedValue();
 
             const result1 = await service.findAssigned(1, { page: 1, limit: 20 });
 
             expect(result1).toEqual(mockResult);
             expect(redis.set).toHaveBeenCalled();
 
-            // Second call - should return from cache
-            jest.spyOn(redis, 'get').mockResolvedValue(JSON.stringify(mockResult));
+            // Second call - should return from cache (JSON.parse converts dates to strings)
+            const cachedResult = JSON.parse(JSON.stringify(mockResult)); // Simulate JSON storage
+            jest.spyOn(redis, 'get').mockResolvedValue(JSON.stringify(cachedResult));
 
             const result2 = await service.findAssigned(1, { page: 1, limit: 20 });
 
-            expect(result2).toEqual(mockResult);
+            expect(result2).toEqual(cachedResult);
             expect(prisma.retailer.findMany).toHaveBeenCalledTimes(1); // Only called once
         });
     });
@@ -180,17 +193,17 @@ describe('RetailersService', () => {
     describe('update', () => {
         it('should update only allowed fields', async () => {
             jest.spyOn(prisma.retailer, 'findUnique').mockResolvedValue(mockRetailer as any);
-            const updatedRetailer = { ...mockRetailer, points: 200, notes: 'Updated notes' };
+            const updatedRetailer = { ...mockRetailer, pointId: 2, notes: 'Updated notes' };
             jest.spyOn(prisma.retailer, 'update').mockResolvedValue(updatedRetailer as any);
 
             const result = await service.update(
                 'RTL-000001',
-                { points: 200, notes: 'Updated notes' },
+                { pointId: 2, notes: 'Updated notes' },
                 undefined,
                 'ADMIN',
             );
 
-            expect(result.points).toBe(200);
+            expect(result.pointId).toBe(2);
             expect(result.notes).toBe('Updated notes');
         });
 
@@ -198,7 +211,7 @@ describe('RetailersService', () => {
             jest.spyOn(prisma.retailer, 'findUnique').mockResolvedValue(null);
 
             await expect(
-                service.update('INVALID', { points: 100 }, undefined, 'ADMIN'),
+                service.update('INVALID', { pointId: 1 }, undefined, 'ADMIN'),
             ).rejects.toThrow(NotFoundException);
         });
     });

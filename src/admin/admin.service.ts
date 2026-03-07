@@ -67,7 +67,7 @@ export class AdminService {
         }
 
         // Validate required columns
-        const requiredColumns = ['uid', 'name', 'phone', 'region_id', 'area_id', 'distributor_id', 'territory_id'];
+        const requiredColumns = ['uid', 'name', 'phone', 'region_id', 'area_id', 'distributor_id', 'territory_id', 'point_id', 'route_id'];
         const headers = Object.keys(records[0]);
         const missingColumns = requiredColumns.filter((col) => !headers.includes(col));
         if (missingColumns.length > 0) {
@@ -91,8 +91,8 @@ export class AdminService {
                             areaId: parseInt(record.area_id, 10),
                             distributorId: parseInt(record.distributor_id, 10),
                             territoryId: parseInt(record.territory_id, 10),
-                            points: record.points ? parseInt(record.points, 10) : 0,
-                            routes: record.routes ? String(record.routes).trim() : null,
+                            pointId: parseInt(record.point_id, 10),
+                            routeId: parseInt(record.route_id, 10),
                             notes: record.notes ? String(record.notes).trim() : null,
                         };
                     } catch (e) {

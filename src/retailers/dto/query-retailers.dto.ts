@@ -32,6 +32,18 @@ export class QueryRetailersDto {
     @IsInt()
     territory_id?: number;
 
+    @ApiPropertyOptional({ description: 'Filter by point ID' })
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    point_id?: number;
+
+    @ApiPropertyOptional({ description: 'Filter by route ID' })
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    route_id?: number;
+
     @ApiPropertyOptional({ description: 'Page number', default: 1 })
     @IsOptional()
     @Type(() => Number)
