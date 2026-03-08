@@ -28,7 +28,7 @@ Choose one of the setup methods below based on your development environment.
 
 ```bash
 # 1. Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/sohanur-rahman0/Retailer-Sales-Representative-App.git
 cd retailer-sales-representative-app
 
 # 2. Start all services (PostgreSQL, Redis, and the app)
@@ -157,7 +157,7 @@ node --version && npm --version && psql --version && redis-cli ping
 
 ```bash
 # 1. Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/sohanur-rahman0/Retailer-Sales-Representative-App.git
 cd retailer-sales-representative-app
 
 # 2. Install dependencies
@@ -543,6 +543,8 @@ docker-compose -f docker-compose.dev.yml exec app npm run start:debug
 
 This backend is designed for horizontal scalability to handle 1M+ retailers and thousands of concurrent SRs:
 
-**Database layer:** PostgreSQL indexes on all foreign keys, UID, name, and phone columns guarantee sub-millisecond lookups even at 1M rows. The `sales_rep_retailers` mapping table with composite unique indexes enables O(1) assignment checks. For reads at extreme scale, PostgreSQL read replicas can be added behind a connection pooler like PgBouncer, with the application routing read queries to replicas. We can also use managed service like AWS RDS.
+**Database layer:** PostgreSQL indexes on all foreign keys, UID, name, and phone columns guarantee sub-millisecond lookups even at 1M rows. For reads at extreme scale, PostgreSQL read replicas can be added behind a connection pooler like PgBouncer, with the application routing read queries to replicas. We can also use managed service like AWS RDS to auto scale Database layer.
 
 **Caching & Application layer:** Redis caches sr assigned retailer get api with a 5-minute TTL, reducing DB load for the most common read path. At scale, this extends to a Redis Cluster with consistent hashing. The stateless NestJS application can be horizontally scaled behind a load balancer (e.g. Nginx ). Bulk CSV imports use streaming parsers with batch inserts (500 records/batch) to avoid memory spikes. For very large imports (100K+ rows), a background job queue (e.g., BullMQ) with Redis as the broker would process imports asynchronously, providing progress tracking via WebSocket or polling.
+
+**The task was completed using LLM assited development.**
